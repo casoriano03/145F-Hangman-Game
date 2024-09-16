@@ -1,3 +1,4 @@
+//model
 var secretWord = '';
 var actualWord = '';
 var guessedLetter = '';
@@ -5,80 +6,49 @@ var repeatCount = 0;
 var mistakesCount = 0;
 var correctCount = 0;
 var wrongLetters = '';
+var isGameStart = true;
+var textValue = false;
+var gameOver = false;
+var isDisabled = false;
 
-display()
+//view
 
-function display() {
-    createMainDivs()
-    inputField()
-}
+createMainDivs()
 
 function createMainDivs() {
-    document.getElementById('app').innerHTML += /*html*/`
+    document.getElementById('app').innerHTML = /*html*/`
     <div class="headingDiv">
     <h1 class="heading">Hangman Game</h1>
+    <div>${gameOver?winOrLoseLogic():''}</div>
     <br/>
     </div>
-    <div id="pictureDiv"></div>
-    <div id="inputDiv"></div>
-    <div id="wordBoxes"></div>
-    <div id="mistakesInfo"></div>
+    <div id="pictureDiv">${isGameStart?'':hangmangPicDiv()}</div>
+    <div id="inputDiv">${isGameStart?startInputField():gameInputField()}</div>
+    <div id="wordBoxes">${isGameStart?'': repeatCreateBox()}</div>
+    <div id="mistakesInfo">${isGameStart?'':mistakesInfo()}</div>
     `;
 }
 
 
-function inputField() {
-    document.getElementById('inputDiv').innerHTML = /*html*/`
-    <h3 class="instructions">Please enter the secret word</h3>
-    <input type="text" id="secretWordInput" oninput="secretWord = this.value">
-    <br/>
-    <br/>
-    <button onclick="generateGame()">Start Game</button>
-    `;
-}
-
+//controller
 
 function generateGame() {
-    document.getElementById('pictureDiv').innerHTML += /*html*/`
-    <div class="images"><img id="head" src="pics/head.png" style="display: none;"></div>
-    <div class="images"><img id="body" src="pics/body.png" style="display: none;"></div>
-    <div class="images"><img id="base" src="pics/base.png" style="display: none;"></div>
-    `;
-    
-    document.getElementById('inputDiv').innerHTML = /*html*/`
-    <h3 class="instructions">Guess The Word, One Letter At A Time</h3>
-    <input id="guessedLetterInput" type="text" value="${guessedLetter}" oninput="guessedLetter = this.value">
-    <br/>
-    <br/>
-    <button onclick="checkGuessedLetter()">Guess</button>
-    `;
-    
-    document.getElementById('guessedLetterInput').value = '';
-    document.getElementById('wordBoxes').innerHTML = '';
-    
-    repeatCreateBox()
-    mistakesInfo()
-    pictureDisplay()
+    isGameStart = false
     winOrLoseLogic()
+    createMainDivs()
 }
 
 function repeatCreateBox() {
-    var numberOfBoxes = secretWord.length
-    if (numberOfBoxes > repeatCount) {
+    var html ='';
+    for (let index = 0; index < secretWord.length; index++) {
         actualWord+='*'
-        createLetterBoxes(actualWord.substring(repeatCount, repeatCount+1))
-        repeatCount++
-        repeatCreateBox()
+        html+=`<div class="boxes">${actualWord[index]}</div>`
     }
-}
-
-function createLetterBoxes(letter) {
-    document.getElementById('wordBoxes').innerHTML += /*html*/`
-    <div class="boxes">${letter}</div>
-    `;
+    return html
 }
 
 function checkGuessedLetter() {
+    textValue=false
     repeatCount = 0;
     guessMistakeCheck()
     actualWord = evaluateHangman(secretWord, actualWord, guessedLetter)
@@ -104,38 +74,60 @@ function evaluateHangman(secretWord, actualWord, guessedLetter){
     + evaluateHangman(secretTextAfterGuessedLetter, currentTextAfterGuessedLetter, guessedLetter);
 }
 
-function mistakesInfo() {
-    return document.getElementById('mistakesInfo').innerHTML = /*html*/`
-    <h4 class="instructions">Wrong Letters Guessed: ${wrongLetters.split('').join(', ')}</h4>
-    <h4 class="instructions">Mistake Count: ${mistakesCount}/3</h4>
-    `;
-}
-
-function pictureDisplay() {
-    if (mistakesCount === 1) document.getElementById('head').style.display='inline'
-    if (mistakesCount === 2) document.getElementById('body').style.display='inline'
-    if (mistakesCount === 3) document.getElementById('base').style.display='inline'
-    return
-}
-
 function winOrLoseLogic() {
     if (correctCount === secretWord.length) {
-        winOrLoseDisplay('You Won!!! 🎉🎉🎉')
-        return
+        gameOver=true
+        isDisabled = true
+        return `<h2 class="instructions">You Won!!! 🎉🎉🎉</h2>
+        <br/>
+        <br/>
+        <button onclick="location.reload()"> Start New Game</button>`
     }
     
     if (mistakesCount === 3) {
-        winOrLoseDisplay('You Lose!!! 😒')
-        return
+        gameOver=true
+        isDisabled = true
+        return `<h2 class="instructions">You Lose!!! 😒</h2>
+        <br/>
+        <br/>
+        <button onclick="location.reload()"> Start New Game</button>`
     }
 }
 
 function winOrLoseDisplay(message) {
-    return document.getElementById('inputDiv').innerHTML = /*html*/`
-    <h2 class="instructions">${message}</h2>
+    return `<h2 class="instructions">${message}</h2>
     <br/>
     <br/>
-    <button onclick="location.reload()"> Start New Game</button>
-    `;
+    <button onclick="location.reload()"> Start New Game</button>`
+}
+
+//components
+
+function startInputField() {
+    return `<h3 class="instructions">Please enter the secret word</h3>
+    <input type="text" id="secretWordInput" oninput="secretWord = this.value">
+    <br/>
+    <br/>
+    <button onclick="generateGame()">Start Game</button>`
+}
+
+function hangmangPicDiv() {
+    return `<div class="images"><img id="head" src="pics/head.png" style="display: ${mistakesCount>0?'inline':'none'};"></div>
+    <div class="images"><img id="body" src="pics/body.png" style="display: ${mistakesCount>1?'inline':'none'};"></div>
+    <div class="images"><img id="base" src="pics/base.png" style="display: ${mistakesCount>2?'inline':'none'};"></div>`
+}
+
+function gameInputField() {
+    return `<h3 class="instructions">Guess The Word, One Letter At A Time</h3>
+    <input id="guessedLetterInput" type="text" value="${textValue?guessedLetter:''}" oninput="guessedLetter = this.value" onchange="textValue=true">
+    <br/>
+    <br/>
+    <button onclick="checkGuessedLetter()" ${isDisabled?'disabled':''}>Guess</button>
+    `
+}
+
+function mistakesInfo() {
+    return `<h4 class="instructions">Wrong Letters Guessed: ${wrongLetters.split('').join(', ')}</h4>
+    <h4 class="instructions">Mistake Count: ${mistakesCount}/3</h4>`
 }
 
