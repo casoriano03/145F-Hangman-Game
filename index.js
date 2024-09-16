@@ -94,13 +94,6 @@ function winOrLoseLogic() {
     }
 }
 
-function winOrLoseDisplay(message) {
-    return `<h2 class="instructions">${message}</h2>
-    <br/>
-    <br/>
-    <button onclick="location.reload()"> Start New Game</button>`
-}
-
 //components
 
 function startInputField() {
